@@ -27,6 +27,9 @@
         <label for="searchName" class="form-label">Search by User Name:</label>
         <input type="text" id="searchName" class="form-control" placeholder="Type at least 3 characters...">
     </div>
+    <div class="col-md-5 d-flex align-items-end justify-content-end">
+        <a href="@Url.Action("Create", "User")" class="btn btn-success">Add User</a>
+    </div>
 </div>
 
 <table id="userTable" class="table table-striped table-bordered" style="width:100%">
@@ -45,13 +48,13 @@
     </thead>
 </table>
 
+<input type="hidden" name="__RequestVerificationToken" id="RequestVerificationToken" value="@antiforgeryToken" />
+
 @section Scripts {
-    <!-- DataTables core -->
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
 
-    <!-- DataTables Buttons -->
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
@@ -66,7 +69,8 @@
             var table = $('#userTable').DataTable({
                 processing: true,
                 serverSide: true,
-                dom: 'Bfrtip', // Tambah tombol di atas tabel
+                searching: false,
+                dom: 'Bfrtip',
                 buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
                 ajax: {
                     url: '@Url.Action("GetUsersJson", "User")',
@@ -114,7 +118,6 @@
                 pageLength: 10,
                 language: {
                     processing: "Loading...",
-                    search: "Search all columns:",
                     lengthMenu: "Show _MENU_ entries",
                     info: "Showing _START_ to _END_ of _TOTAL_ entries",
                     infoEmpty: "No entries found",
@@ -144,7 +147,7 @@
                     url: '/User/ToggleStatusJson',
                     type: 'POST',
                     headers: {
-                        'RequestVerificationToken': '@antiforgeryToken'
+                        'RequestVerificationToken': document.getElementById('RequestVerificationToken').value
                     },
                     data: { id: userId },
                     success: function (response) {
