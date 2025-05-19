@@ -9,7 +9,6 @@
 
 <h2>@ViewData["Title"]</h2>
 
-
 <div class="row mb-3">
     <div class="col-md-3">
         <label for="roleFilter" class="form-label">Filter by Role:</label>
@@ -47,14 +46,28 @@
 </table>
 
 @section Scripts {
+    <!-- DataTables core -->
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+
+    <!-- DataTables Buttons -->
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.68/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.68/vfs_fonts.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" />
 
     <script>
         $(document).ready(function () {
             var table = $('#userTable').DataTable({
                 processing: true,
                 serverSide: true,
+                dom: 'Bfrtip', // Tambah tombol di atas tabel
+                buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
                 ajax: {
                     url: '@Url.Action("GetUsersJson", "User")',
                     type: 'GET',
@@ -125,7 +138,6 @@
                 }
             });
 
-            // Tombol toggle status aktif/nonaktif via AJAX POST dengan CSRF token
             $('#userTable').on('click', '.toggle-status', function () {
                 var userId = $(this).data('id');
                 $.ajax({
@@ -138,7 +150,7 @@
                     success: function (response) {
                         if (response.success) {
                             alert('Status user berhasil diubah menjadi: ' + response.status);
-                            table.ajax.reload(null, false); // reload tanpa reset page
+                            table.ajax.reload(null, false);
                         } else {
                             alert('Gagal: ' + response.message);
                         }
@@ -150,6 +162,4 @@
             });
         });
     </script>
-
-    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
 }
