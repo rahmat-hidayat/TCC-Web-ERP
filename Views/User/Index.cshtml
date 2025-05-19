@@ -1,0 +1,105 @@
+﻿@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "User Management";
+    var roleList = ViewBag.RoleList as SelectList;
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<div class="row mb-3">
+    <div class="col-md-3">
+        <label for="roleFilter" class="form-label">Filter by Role:</label>
+        <select id="roleFilter" class="form-select">
+            <option value="">-- All Roles --</option>
+            @foreach (var role in roleList)
+            {
+                <option value="@role.Value">@role.Text</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-4">
+        <label for="searchName" class="form-label">Search by User Name:</label>
+        <input type="text" id="searchName" class="form-control" placeholder="Type at least 3 characters...">
+    </div>
+</div>
+
+<table id="userTable" class="table table-striped table-bordered" style="width:100%">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>User Name</th>
+            <th>Group ID</th>
+            <th>Entry User</th>
+            <th>Entry Date</th>
+            <th>Status</th>
+            <th style="display:none;">Role ID</th>
+            <th>Role</th>
+        </tr>
+    </thead>
+</table>
+
+@section Scripts {
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            var table = $('#userTable').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: '@Url.Action("GetUsersJson", "User")',
+                    type: 'GET',
+                    data: function (d) {
+                        d.roleFilter = $('#roleFilter').val();
+                        d.searchName = $('#searchName').val();
+                    },
+                    error: function (xhr, error, thrown) {
+                        alert('Error loading data: ' + (xhr.responseJSON?.error || error));
+                    }
+                },
+                columns: [
+                    { data: 'userId', title: 'ID' },
+                    { data: 'userName', title: 'User Name' },
+                    { data: 'groupId', title: 'Group ID' },
+                    { data: 'entUser', title: 'Entry User' },
+                    { data: 'entDate', title: 'Entry Date' },
+                    { data: 'status', title: 'Status' },
+                    { data: 'roleId', visible: false },  // Role ID disembunyikan
+                    { data: 'roleName', title: 'Role' }
+                ],
+                order: [[1, 'asc']],
+                lengthMenu: [10, 25, 50],
+                pageLength: 10,
+                language: {
+                    processing: "Loading...",
+                    search: "Search all columns:",
+                    lengthMenu: "Show _MENU_ entries",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    infoEmpty: "No entries found",
+                    infoFiltered: "(filtered from _MAX_ total entries)",
+                    zeroRecords: "No matching records found",
+                    paginate: {
+                        next: "Next",
+                        previous: "Previous"
+                    }
+                }
+            });
+
+            // Reload data saat filter role berubah
+            $('#roleFilter').on('change', function () {
+                table.ajax.reload();
+            });
+
+            // Reload data saat search name minimal 3 karakter atau kosong
+            $('#searchName').on('keyup', function () {
+                var val = $(this).val();
+                if (val.length >= 3 || val.length === 0) {
+                    table.ajax.reload();
+                }
+            });
+        });
+    </script>
+
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+}

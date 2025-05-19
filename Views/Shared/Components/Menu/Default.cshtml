@@ -1,0 +1,27 @@
+﻿@model IEnumerable<TCC_Web_ERP.Helpers.MenuItem>
+
+<ul class="nav flex-row custom-menu">
+    @foreach (var item in Model)
+    {
+        <li class="nav-item">
+            <a class="nav-link" href="@item.Menu.Url?.Trim()">
+                <i class="@item.Menu.Icon"></i>
+                @item.Menu.Title
+            </a>
+            @if (item.Children != null && item.Children.Any())
+            {
+                <ul class="nav flex-column ms-3">
+                    @foreach (var child in item.Children)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" href="@child.Menu.Url?.Trim()">
+                                <i class="@child.Menu.Icon"></i>
+                                @child.Menu.Title
+                            </a>
+                        </li>
+                    }
+                </ul>
+            }
+        </li>
+    }
+</ul>
