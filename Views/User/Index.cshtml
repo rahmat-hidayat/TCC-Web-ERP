@@ -1,19 +1,26 @@
 ﻿@using Microsoft.AspNetCore.Mvc.Rendering
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+
 @{
     ViewData["Title"] = "User Management";
     var roleList = ViewBag.RoleList as SelectList;
+    var antiforgeryToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
 }
 
 <h2>@ViewData["Title"]</h2>
+
 
 <div class="row mb-3">
     <div class="col-md-3">
         <label for="roleFilter" class="form-label">Filter by Role:</label>
         <select id="roleFilter" class="form-select">
             <option value="">-- All Roles --</option>
-            @foreach (var role in roleList)
+            @if (roleList != null)
             {
-                <option value="@role.Value">@role.Text</option>
+                foreach (var role in roleList)
+                {
+                    <option value="@role.Value">@role.Text</option>
+                }
             }
         </select>
     </div>
@@ -34,6 +41,7 @@
             <th>Status</th>
             <th style="display:none;">Role ID</th>
             <th>Role</th>
+            <th>Aksi</th>
         </tr>
     </thead>
 </table>
@@ -64,9 +72,29 @@
                     { data: 'groupId', title: 'Group ID' },
                     { data: 'entUser', title: 'Entry User' },
                     { data: 'entDate', title: 'Entry Date' },
-                    { data: 'status', title: 'Status' },
-                    { data: 'roleId', visible: false },  // Role ID disembunyikan
-                    { data: 'roleName', title: 'Role' }
+                    {
+                        data: 'status',
+                        render: function (data) {
+                            return data === 'ACT'
+                                ? '<span class="text-success fw-bold">Aktif</span>'
+                                : '<span class="text-danger fw-bold">Nonaktif</span>';
+                        }
+                    },
+                    { data: 'roleId', visible: false },
+                    { data: 'roleName', title: 'Role' },
+                    {
+                        data: 'userId',
+                        orderable: false,
+                        searchable: false,
+                        render: function (data, type, row) {
+                            return `
+                                <a href="/User/Edit/${data}" class="btn btn-sm btn-primary me-1">Edit</a>
+                                <a href="/User/Details/${data}" class="btn btn-sm btn-info me-1">Details</a>
+                                <a href="/User/Delete/${data}" class="btn btn-sm btn-danger me-1">Delete</a>
+                                <button class="btn btn-sm btn-warning toggle-status" data-id="${data}">Toggle</button>
+                            `;
+                        }
+                    }
                 ],
                 order: [[1, 'asc']],
                 lengthMenu: [10, 25, 50],
@@ -86,17 +114,39 @@
                 }
             });
 
-            // Reload data saat filter role berubah
             $('#roleFilter').on('change', function () {
                 table.ajax.reload();
             });
 
-            // Reload data saat search name minimal 3 karakter atau kosong
             $('#searchName').on('keyup', function () {
                 var val = $(this).val();
                 if (val.length >= 3 || val.length === 0) {
                     table.ajax.reload();
                 }
+            });
+
+            // Tombol toggle status aktif/nonaktif via AJAX POST dengan CSRF token
+            $('#userTable').on('click', '.toggle-status', function () {
+                var userId = $(this).data('id');
+                $.ajax({
+                    url: '/User/ToggleStatusJson',
+                    type: 'POST',
+                    headers: {
+                        'RequestVerificationToken': '@antiforgeryToken'
+                    },
+                    data: { id: userId },
+                    success: function (response) {
+                        if (response.success) {
+                            alert('Status user berhasil diubah menjadi: ' + response.status);
+                            table.ajax.reload(null, false); // reload tanpa reset page
+                        } else {
+                            alert('Gagal: ' + response.message);
+                        }
+                    },
+                    error: function () {
+                        alert('Gagal toggle status user.');
+                    }
+                });
             });
         });
     </script>
