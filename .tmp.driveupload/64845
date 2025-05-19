@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PendingCommit>
-  <CommitComment>tambahkan button add user</CommitComment>
+  <CommitComment>Menyajikan halaman index dengan UserIndexViewModel yang berisi daftar role untuk dropdown filter</CommitComment>
   <PinnedBranches />
   <PublishPrompt Enabled="True" />
   <ActiveAccountPrompt Enabled="True" />

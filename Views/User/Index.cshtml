@@ -1,9 +1,11 @@
 ﻿@using Microsoft.AspNetCore.Mvc.Rendering
+@model TCC_Web_ERP.ViewModels.UserIndexViewModel
+
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 
 @{
     ViewData["Title"] = "User Management";
-    var roleList = ViewBag.RoleList as SelectList;
+    var roleList = Model.RoleList; // ambil roleList langsung dari model, bukan ViewBag
     var antiforgeryToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
 }
 

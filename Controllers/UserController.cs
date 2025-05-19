@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using TCC_Web_ERP.Data;
 using TCC_Web_ERP.Models;
+using TCC_Web_ERP.ViewModels;
 
 namespace TCC_Web_ERP.Controllers
 {
@@ -16,8 +17,12 @@ namespace TCC_Web_ERP.Controllers
         // GET: User
         public IActionResult Index()
         {
-            ViewBag.RoleList = new SelectList(_context.TROLE.Where(r => r.IsActive).ToList(), "RoleId", "RoleName");
-            return View();
+            var roleList = new SelectList(_context.TROLE.Where(r => r.IsActive).ToList(), "RoleId", "RoleName");
+            var vm = new UserIndexViewModel
+            {
+                RoleList = roleList
+            };
+            return View(vm);
         }
 
         [HttpGet]
@@ -36,21 +41,23 @@ namespace TCC_Web_ERP.Controllers
                     sortColumnIndex = 1;
 
                 var sortDirection = HttpContext.Request.Query["order[0][dir]"].FirstOrDefault() ?? "asc";
-                var searchValue = HttpContext.Request.Query["search[value]"].FirstOrDefault()?.ToLower();
-                var searchName = HttpContext.Request.Query["searchName"].FirstOrDefault()?.ToLower();
+                var searchValue = HttpContext.Request.Query["search[value]"].FirstOrDefault();
+                var searchName = HttpContext.Request.Query["searchName"].FirstOrDefault();
                 var roleFilter = HttpContext.Request.Query["roleFilter"].FirstOrDefault();
 
                 var query = _context.TUSER.Include(u => u.Role).AsQueryable();
 
                 if (!string.IsNullOrEmpty(searchName))
                 {
-                    query = query.Where(u => u.UserName != null && u.UserName.ToLower().Contains(searchName));
+                    var pattern = $"%{searchName}%";
+                    query = query.Where(u => EF.Functions.Like(u.UserName, pattern));
                 }
                 else if (!string.IsNullOrEmpty(searchValue))
                 {
+                    var pattern = $"%{searchValue}%";
                     query = query.Where(u =>
-                        (u.UserName != null && u.UserName.ToLower().Contains(searchValue)) ||
-                        (u.Role != null && u.Role.RoleName != null && u.Role.RoleName.ToLower().Contains(searchValue))
+                        EF.Functions.Like(u.UserName, pattern) ||
+                        (u.Role != null && EF.Functions.Like(u.Role.RoleName, pattern))
                     );
                 }
 
@@ -76,9 +83,6 @@ namespace TCC_Web_ERP.Controllers
                         : query.OrderByDescending(u => u.Role != null ? u.Role.RoleName : ""),
                     _ => query.OrderBy(u => u.UserName),
                 };
-
-                if (start < 0) start = 0;
-                if (length <= 0) length = 10;
 
                 var data = await query.Skip(start).Take(length).ToListAsync();
 
@@ -108,7 +112,6 @@ namespace TCC_Web_ERP.Controllers
             }
         }
 
-        // Method untuk toggle status via AJAX POST
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleStatusJson([FromForm] int id)
@@ -140,6 +143,6 @@ namespace TCC_Web_ERP.Controllers
             }
         }
 
-        // CRUD method lain bisa tetap sama seperti sebelumnya
+        // CRUD method lain bisa kamu tambahkan sesuai kebutuhan
     }
 }
