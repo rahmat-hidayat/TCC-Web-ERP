@@ -4,48 +4,63 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 using TCC_Web_ERP.Data;
 using TCC_Web_ERP.Models;
 using TCC_Web_ERP.ViewModels;
+using BCrypt.Net;
 
 namespace TCC_Web_ERP.Controllers
 {
-    public class UserController(AppDbContext context) : Controller
+    public class UserController : Controller
     {
-        private readonly AppDbContext _context = context;
+        private readonly AppDbContext _context;
 
-        // GET: User
+        public UserController(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        // ================================
+        // GET: User Index (View + Filter)
+        // ================================
         public IActionResult Index()
         {
-            var roleList = new SelectList(_context.TROLE.Where(r => r.IsActive).ToList(), "RoleId", "RoleName");
-            var vm = new UserIndexViewModel
+            var roleList = new SelectList(
+                _context.TROLE.Where(r => r.IsActive).ToList(),
+                "RoleId",
+                "RoleName"
+            );
+
+            var viewModel = new UserIndexViewModel
             {
                 RoleList = roleList
             };
-            return View(vm);
+
+            return View(viewModel);
         }
 
+        // ===========================================
+        // GET: JSON User List for DataTables (Ajax)
+        // ===========================================
         [HttpGet]
         public async Task<IActionResult> GetUsersJson()
         {
             try
             {
                 var draw = HttpContext.Request.Query["draw"].FirstOrDefault() ?? "1";
-
-                if (!int.TryParse(HttpContext.Request.Query["start"].FirstOrDefault(), out int start))
-                    start = 0;
-                if (!int.TryParse(HttpContext.Request.Query["length"].FirstOrDefault(), out int length))
-                    length = 10;
-
-                if (!int.TryParse(HttpContext.Request.Query["order[0][column]"].FirstOrDefault(), out int sortColumnIndex))
-                    sortColumnIndex = 1;
-
+                int.TryParse(HttpContext.Request.Query["start"].FirstOrDefault(), out int start);
+                int.TryParse(HttpContext.Request.Query["length"].FirstOrDefault(), out int length);
+                int.TryParse(HttpContext.Request.Query["order[0][column]"].FirstOrDefault(), out int sortColumnIndex);
                 var sortDirection = HttpContext.Request.Query["order[0][dir]"].FirstOrDefault() ?? "asc";
+
                 var searchValue = HttpContext.Request.Query["search[value]"].FirstOrDefault();
                 var searchName = HttpContext.Request.Query["searchName"].FirstOrDefault();
                 var roleFilter = HttpContext.Request.Query["roleFilter"].FirstOrDefault();
 
-                var query = _context.TUSER.Include(u => u.Role).AsQueryable();
+                var query = _context.TUSER
+                    .Include(u => u.Role)
+                    .AsQueryable();
 
                 if (!string.IsNullOrEmpty(searchName))
                 {
@@ -112,6 +127,9 @@ namespace TCC_Web_ERP.Controllers
             }
         }
 
+        // ===============================
+        // POST: Toggle User Status (Ajax)
+        // ===============================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleStatusJson([FromForm] int id)
@@ -143,6 +161,67 @@ namespace TCC_Web_ERP.Controllers
             }
         }
 
-        // CRUD method lain bisa kamu tambahkan sesuai kebutuhan
+        // ==========================
+        // POST: Create New User JSON
+        // ==========================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult CreateJson(TUser user)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var userName = HttpContext.Session.GetString("UserName") ?? "System";
+
+                    // 🔒 Hash password menggunakan bcrypt
+                    if (!string.IsNullOrEmpty(user.UserPassword))
+                    {
+                        user.UserPassword = BCrypt.Net.BCrypt.HashPassword(user.UserPassword);
+                    }
+
+                    user.EntDate = DateTime.Now;
+                    user.EntUser = userName;
+                    user.UptUser = userName;
+                    user.UptDate = DateTime.Now;
+                    user.Status = "ACT";
+                    user.Valid = DateTime.Now;
+                    user.UptProgramm = "USER_CREATE";
+                    user.Version = "1.1.7.6";
+
+                    _context.TUSER.Add(user);
+                    _context.SaveChanges();
+
+                    return Ok(new { success = true });
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("❌ ERROR SIMPAN USER: " + ex.Message);
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Gagal menyimpan ke database: " + ex.Message
+                    });
+                }
+            }
+
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+
+            Console.WriteLine("❌ VALIDATION ERROR: " + string.Join(" | ", errors));
+            return BadRequest(new
+            {
+                success = false,
+                message = "Data tidak valid",
+                errors
+            });
+        }
+
+        // ===============================
+        // Tambahan CRUD (Edit, Delete, dll)
+        // ===============================
+        // Tambahkan method EditJson, DeleteJson, atau Detail jika diperlukan
     }
 }

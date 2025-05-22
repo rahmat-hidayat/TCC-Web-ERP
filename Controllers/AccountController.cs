@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
-using System.Text;
 using TCC_Web_ERP.Data;
 using TCC_Web_ERP.Models;
 using Microsoft.AspNetCore.Http;
+using System;
 
 namespace TCC_Web_ERP.Controllers
 {
@@ -30,93 +29,46 @@ namespace TCC_Web_ERP.Controllers
                 return View();
             }
 
-            string hashedPassword = ComputeSha512Hash(password);
-
+            // Ambil user berdasarkan username dan status aktif
             var user = await _context.TUSER
-                .FirstOrDefaultAsync(u => u.UserName == username && u.UserPassword == hashedPassword && u.Status == "ACT");
+                .FirstOrDefaultAsync(u => u.UserName == username && u.Status == "ACT");
 
-            if (user == null)
+            if (user == null || string.IsNullOrEmpty(user.UserPassword))
             {
                 ViewBag.Error = "Username atau password salah, atau user tidak aktif.";
                 return View();
             }
 
-            // Simpan session user login
-            // Simpan session user login
-            if (!string.IsNullOrEmpty(user.UserName))
+            // Verifikasi password menggunakan bcrypt
+            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(password, user.UserPassword);
+
+            if (!isPasswordValid)
             {
-                HttpContext.Session.SetString("UserName", user.UserName);
-            }
-            // Updated code to handle potential null reference for 'user.UserName'
-            if (!string.IsNullOrEmpty(user.UserName))
-            {
-                HttpContext.Session.SetString("UserName", user.UserName);
-            }
-            else
-            {
-                HttpContext.Session.SetString("UserName", string.Empty); // Fallback to an empty string
-            }
-            // Updated code to handle potential null reference for 'user.UserName'
-            if (!string.IsNullOrEmpty(user.UserName))
-            {
-                HttpContext.Session.SetString("UserName", user.UserName);
-            }
-            else
-            {
-                HttpContext.Session.SetString("UserName", string.Empty); // Fallback to an empty string
-            }
-            // Updated code to handle potential null reference for 'user.UserName'
-            if (!string.IsNullOrEmpty(user.UserName))
-            {
-                HttpContext.Session.SetString("UserName", user.UserName);
-            }
-            else
-            {
-                HttpContext.Session.SetString("UserName", string.Empty); // Fallback to an empty string
-            }
-            // Updated code to handle potential null reference for 'user.UserName'
-            if (!string.IsNullOrEmpty(user.UserName))
-            {
-                HttpContext.Session.SetString("UserName", user.UserName);
-            }
-            else
-            {
-                HttpContext.Session.SetString("UserName", string.Empty); // Fallback to an empty string
-            }
-            // Updated code to handle potential null reference for 'user.UserName'
-            if (!string.IsNullOrEmpty(user.UserName))
-            {
-                HttpContext.Session.SetString("UserName", user.UserName);
-            }
-            else
-            {
-                HttpContext.Session.SetString("UserName", string.Empty); // Fallback to an empty string
+                ViewBag.Error = "Username atau password salah.";
+                return View();
             }
 
+            // ✅ Update kolom login info
+            user.LastLogin = DateTime.Today; // format: yyyy-MM-dd 00:00:00.000
+            user.UptProgramm = "Login To System";
+            user.Version = "1.1.7.6";
 
-            // Redirect ke halaman dashboard (atau home)
+            await _context.SaveChangesAsync();
+
+            // Simpan session user login
+            HttpContext.Session.SetString("UserName", user.UserName ?? string.Empty);
+
+            // Redirect ke halaman dashboard
             return RedirectToAction("Index", "Home");
         }
 
-        // GET: /Account/Logout
+        // POST: /Account/Logout
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Logout()
         {
-            // Bersihkan semua session
             HttpContext.Session.Clear();
-
-            // Redirect ke halaman login setelah logout
             return RedirectToAction("Login");
-        }
-
-        public static string ComputeSha512Hash(string rawData)
-        {
-            byte[] bytes = SHA512.HashData(Encoding.UTF8.GetBytes(rawData));
-            StringBuilder builder = new();
-            foreach (var b in bytes)
-                builder.Append(b.ToString("x2"));
-            return builder.ToString();
         }
     }
 }

@@ -1,27 +1,24 @@
 ﻿@using Microsoft.AspNetCore.Mvc.Rendering
 @model TCC_Web_ERP.ViewModels.UserIndexViewModel
-
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 
 @{
     ViewData["Title"] = "User Management";
-    var roleList = Model.RoleList; // ambil roleList langsung dari model, bukan ViewBag
+    var roleList = Model.RoleList;
     var antiforgeryToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
 }
 
 <h2>@ViewData["Title"]</h2>
 
+<!-- Filter dan Pencarian -->
 <div class="row mb-3">
     <div class="col-md-3">
         <label for="roleFilter" class="form-label">Filter by Role:</label>
         <select id="roleFilter" class="form-select">
             <option value="">-- All Roles --</option>
-            @if (roleList != null)
+            @foreach (var role in roleList)
             {
-                foreach (var role in roleList)
-                {
-                    <option value="@role.Value">@role.Text</option>
-                }
+                <option value="@role.Value">@role.Text</option>
             }
         </select>
     </div>
@@ -30,16 +27,16 @@
         <input type="text" id="searchName" class="form-control" placeholder="Type at least 3 characters...">
     </div>
     <div class="col-md-5 d-flex align-items-end justify-content-end">
-        <a href="@Url.Action("Create", "User")" class="btn btn-success">Add User</a>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addUserModal">+ Add User</button>
     </div>
 </div>
 
+<!-- Tabel Data User -->
 <table id="userTable" class="table table-striped table-bordered" style="width:100%">
     <thead>
         <tr>
             <th>ID</th>
             <th>User Name</th>
-            <th>Group ID</th>
             <th>Entry User</th>
             <th>Entry Date</th>
             <th>Status</th>
@@ -50,13 +47,65 @@
     </thead>
 </table>
 
-<input type="hidden" name="__RequestVerificationToken" id="RequestVerificationToken" value="@antiforgeryToken" />
+<!-- Modal Tambah User -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <form id="formAddUser" novalidate>
+                <div class="modal-header bg-primary text-white rounded-top">
+                    <h5 class="modal-title">Tambah User Baru</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label for="UserName" class="form-label fw-semibold">User Name</label>
+                        <input type="text" name="UserName" id="UserName" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="UserPassword" class="form-label fw-semibold">Password</label>
+                        <input type="password" name="UserPassword" id="UserPassword" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="RoleId" class="form-label fw-semibold">Role</label>
+                        <select name="RoleId" id="RoleId" class="form-select" required>
+                            <option value="">-- Pilih Role --</option>
+                            @foreach (var role in roleList)
+                            {
+                                <option value="@role.Value">@role.Text</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Hidden fields -->
+                    <input type="hidden" name="EntDate" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")" />
+                    <input type="hidden" name="EntUser" value="admin" />
+                    <input type="hidden" name="UptProgramm" value="UserIndex" />
+                    <input type="hidden" name="Status" value="ACT" />
+                    <input type="hidden" name="Valid" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")" />
+                    <input type="hidden" name="ChangePass" value="0" />
+                    <input type="hidden" name="Blocked" value="0" />
+                    <input type="hidden" name="SuperUser" value="0" />
+                    <input type="hidden" name="Tablet" value="0" />
+                    <input type="hidden" name="Driver" value="0" />
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4 pt-0">
+                    <button type="submit" class="btn btn-success shadow-sm px-4">Simpan</button>
+                    <button type="button" class="btn btn-outline-secondary shadow-sm px-4" data-bs-dismiss="modal">Batal</button>
+                </div>
+                <input type="hidden" name="__RequestVerificationToken" value="@antiforgeryToken" />
+            </form>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
 
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" />
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
@@ -64,16 +113,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.68/pdfmake.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.68/vfs_fonts.js"></script>
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" />
 
     <script>
-        $(document).ready(function () {
+        $(function () {
             var table = $('#userTable').DataTable({
                 processing: true,
                 serverSide: true,
-                searching: false,
-                dom: 'Bfrtip',
+                dom: 'lBfrtip',
                 buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+                    lengthMenu: [
+            [10, 25, 50, -1],
+            [10, 25, 50, "All"]
+        ],
                 ajax: {
                     url: '@Url.Action("GetUsersJson", "User")',
                     type: 'GET',
@@ -81,16 +132,25 @@
                         d.roleFilter = $('#roleFilter').val();
                         d.searchName = $('#searchName').val();
                     },
-                    error: function (xhr, error, thrown) {
-                        alert('Error loading data: ' + (xhr.responseJSON?.error || error));
+                    error: function (xhr) {
+                        alert('Error loading data: ' + (xhr.responseJSON?.error || xhr.statusText));
                     }
                 },
                 columns: [
-                    { data: 'userId', title: 'ID' },
-                    { data: 'userName', title: 'User Name' },
-                    { data: 'groupId', title: 'Group ID' },
-                    { data: 'entUser', title: 'Entry User' },
-                    { data: 'entDate', title: 'Entry Date' },
+                    { data: 'userId' },
+                    { data: 'userName' },
+                    { data: 'entUser' },
+                    {
+                        data: 'entDate',
+                        render: function (data) {
+                            if (!data) return '';
+                            const date = new Date(data);
+                            const day = String(date.getDate()).padStart(2, '0');
+                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                            const year = date.getFullYear();
+                            return `${day}-${month}-${year}`;
+                        }
+                    },
                     {
                         data: 'status',
                         render: function (data) {
@@ -100,12 +160,12 @@
                         }
                     },
                     { data: 'roleId', visible: false },
-                    { data: 'roleName', title: 'Role' },
+                    { data: 'roleName' },
                     {
                         data: 'userId',
                         orderable: false,
                         searchable: false,
-                        render: function (data, type, row) {
+                        render: function (data) {
                             return `
                                 <a href="/User/Edit/${data}" class="btn btn-sm btn-primary me-1">Edit</a>
                                 <a href="/User/Details/${data}" class="btn btn-sm btn-info me-1">Details</a>
@@ -114,54 +174,82 @@
                             `;
                         }
                     }
-                ],
-                order: [[1, 'asc']],
-                lengthMenu: [10, 25, 50],
-                pageLength: 10,
-                language: {
-                    processing: "Loading...",
-                    lengthMenu: "Show _MENU_ entries",
-                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                    infoEmpty: "No entries found",
-                    infoFiltered: "(filtered from _MAX_ total entries)",
-                    zeroRecords: "No matching records found",
-                    paginate: {
-                        next: "Next",
-                        previous: "Previous"
-                    }
-                }
+                ] 
             });
 
-            $('#roleFilter').on('change', function () {
-                table.ajax.reload();
-            });
-
-            $('#searchName').on('keyup', function () {
-                var val = $(this).val();
-                if (val.length >= 3 || val.length === 0) {
+            $('#roleFilter, #searchName').on('change keyup', function () {
+                const search = $('#searchName').val();
+                if (search.length >= 3 || search.length === 0) {
                     table.ajax.reload();
                 }
             });
 
             $('#userTable').on('click', '.toggle-status', function () {
-                var userId = $(this).data('id');
+                const userId = $(this).data('id');
                 $.ajax({
                     url: '/User/ToggleStatusJson',
                     type: 'POST',
                     headers: {
-                        'RequestVerificationToken': document.getElementById('RequestVerificationToken').value
+                        'RequestVerificationToken': $('[name="__RequestVerificationToken"]').val()
                     },
                     data: { id: userId },
                     success: function (response) {
                         if (response.success) {
-                            alert('Status user berhasil diubah menjadi: ' + response.status);
                             table.ajax.reload(null, false);
                         } else {
-                            alert('Gagal: ' + response.message);
+                            alert(response.message || 'Gagal mengubah status user.');
                         }
                     },
                     error: function () {
-                        alert('Gagal toggle status user.');
+                        alert('Terjadi kesalahan pada server.');
+                    }
+                });
+            });
+
+            $('#formAddUser').submit(function (e) {
+                e.preventDefault();
+                if (!this.checkValidity()) {
+                    this.reportValidity();
+                    return;
+                }
+
+                var formData = $(this).serialize();
+                var userName = $('#UserName').val();
+
+                $.ajax({
+                    url: '/User/CreateJson',
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': $('[name="__RequestVerificationToken"]').val()
+                    },
+                    data: formData,
+                    success: function (response) {
+                        if (response.success) {
+                            $('#addUserModal').modal('hide');
+                            $('#formAddUser')[0].reset();
+                            table.ajax.reload(null, false);
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: `Data user "${userName}" berhasil diinput.`,
+                                timer: 3000,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal!',
+                                text: response.message || 'Terjadi kesalahan saat menambah user.'
+                            });
+                        }
+                    },
+                    error: function () {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Server Error!',
+                            text: 'Terjadi kesalahan pada server.'
+                        });
                     }
                 });
             });
