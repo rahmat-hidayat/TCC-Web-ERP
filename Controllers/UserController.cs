@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using TCC_Web_ERP.Data;
 using TCC_Web_ERP.Models;
 using TCC_Web_ERP.ViewModels;
+using System.Collections.Generic;
 using BCrypt.Net;
 
 namespace TCC_Web_ERP.Controllers
@@ -99,7 +100,17 @@ namespace TCC_Web_ERP.Controllers
                     _ => query.OrderBy(u => u.UserName),
                 };
 
-                var data = await query.Skip(start).Take(length).ToListAsync();
+                List<TUser> data;
+                if (length == -1)
+                {
+                    // Jika user memilih "All", ambil semua data (tanpa paginasi)
+                    data = await query.ToListAsync();
+                }
+                else
+                {
+                    // Ambil data sesuai paginasi normal
+                    data = await query.Skip(start).Take(length).ToListAsync();
+                }
 
                 var result = data.Select(u => new
                 {
@@ -174,7 +185,6 @@ namespace TCC_Web_ERP.Controllers
                 {
                     var userName = HttpContext.Session.GetString("UserName") ?? "System";
 
-                    // 🔒 Hash password menggunakan bcrypt
                     if (!string.IsNullOrEmpty(user.UserPassword))
                     {
                         user.UserPassword = BCrypt.Net.BCrypt.HashPassword(user.UserPassword);
@@ -196,7 +206,6 @@ namespace TCC_Web_ERP.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("❌ ERROR SIMPAN USER: " + ex.Message);
                     return BadRequest(new
                     {
                         success = false,
@@ -210,7 +219,6 @@ namespace TCC_Web_ERP.Controllers
                 .Select(e => e.ErrorMessage)
                 .ToList();
 
-            Console.WriteLine("❌ VALIDATION ERROR: " + string.Join(" | ", errors));
             return BadRequest(new
             {
                 success = false,
