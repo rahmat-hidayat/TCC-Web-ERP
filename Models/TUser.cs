@@ -100,7 +100,7 @@ namespace TCC_Web_ERP.Models
 
         [Required]
         [Column("ROLE_ID")]
-        public int RoleId { get; set; }
+        public int? RoleId { get; set; }
 
         // Navigation property
         public TRole? Role { get; set; }
