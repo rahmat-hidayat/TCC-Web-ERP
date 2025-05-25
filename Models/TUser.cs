@@ -17,24 +17,23 @@ namespace TCC_Web_ERP.Models
         [StringLength(30)]
         public string UserName { get; set; } = string.Empty;
 
-        [Required]
+        
         [Column("GROUP_ID")]
         public decimal GroupId { get; set; }
 
         [Required]
         [Column("USER_PASSWORD")]
         [StringLength(128)]
-        public string UserPassword { get; set; } = string.Empty;
+        public required string UserPassword { get; set; } 
 
         [Column("LAST_LOGIN")]
         public DateTime? LastLogin { get; set; }
 
-        [Required]
+        
         [Column("ENT_USER")]
         [StringLength(50)]
-        public string EntUser { get; set; } = string.Empty;
-
-        [Required]
+        public required string EntUser { get; set; } 
+        
         [Column("ENT_DATE")]
         public DateTime? EntDate { get; set; }
 
@@ -45,10 +44,10 @@ namespace TCC_Web_ERP.Models
         [Column("UPT_DATE")]
         public DateTime? UptDate { get; set; }
 
-        [Required]
+        
         [Column("UPT_PROGRAMM")]
         [StringLength(50)]
-        public string UptProgramm { get; set; } = string.Empty;
+        public required string UptProgramm { get; set; } 
 
         [Column("REMARK")]
         [StringLength(100)]
@@ -58,23 +57,23 @@ namespace TCC_Web_ERP.Models
         [StringLength(10)]
         public string? Version { get; set; }
 
-        [Required]
+        
         [Column("STATUS")]
         [StringLength(3)]
         public string Status { get; set; } = "ACT";
 
-        [Required]
+        
         [Column("VALID", TypeName = "smalldatetime")]
         public DateTime Valid { get; set; }
 
         [Required]
         [Column("change_pass")]
         [StringLength(1)]
-        public string ChangePass { get; set; } = "0";
+        public required string ChangePass { get; set; }
 
-        [Required]
+        
         [Column("BLOCKED")]
-        public decimal Blocked { get; set; } = 0;
+        public decimal Blocked { get; set; } 
 
         [Column("mac_add")]
         [StringLength(20)]
@@ -87,20 +86,21 @@ namespace TCC_Web_ERP.Models
         [StringLength(50)]
         public string? Email { get; set; }
 
-        [Required]
+        
         [Column("super_user")]
-        public double SuperUser { get; set; } = 0;
+        public double SuperUser { get; set; } 
 
-        [Required]
+        
         [Column("tablet")]
-        public double Tablet { get; set; } = 0;
+        public double Tablet { get; set; }
+
+        
+        [Column("driver")]
+        public double Driver { get; set; }
 
         [Required]
-        [Column("driver")]
-        public double Driver { get; set; } = 0;
-
         [Column("ROLE_ID")]
-        public int? RoleId { get; set; }
+        public int RoleId { get; set; }
 
         // Navigation property
         public TRole? Role { get; set; }

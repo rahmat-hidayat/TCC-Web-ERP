@@ -1,0 +1,48 @@
+﻿@model CreateUserViewModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+
+
+@{
+    var antiforgeryToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
+}
+
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <form id="formAddUser" novalidate>
+                <div class="modal-header bg-primary text-white rounded-top">
+                    <h5 class="modal-title">Tambah User Baru</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label for="UserName" class="form-label fw-semibold">USER NAME</label>
+                        <input type="text" name="UserName" id="UserName" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="UserPassword" class="form-label fw-semibold">PASSWORD</label>
+                        <input type="password" name="UserPassword" id="UserPassword" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="RoleId" class="form-label fw-semibold">ROLE USER</label>
+                        <select name="RoleId" class="form-select" required>
+                            <option value="">-- PILIH ROLE USER --</option>
+                            @foreach (var role in Model.RoleList)
+                            {
+                                <option value="@role.Value">@role.Text</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Hidden fields -->
+                    
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4 pt-0">
+                    <button type="submit" class="btn btn-success shadow-sm px-4">Simpan</button>
+                    <button type="button" class="btn btn-outline-secondary shadow-sm px-4" data-bs-dismiss="modal">Batal</button>
+                </div>
+                <input type="hidden" name="__RequestVerificationToken" value="@antiforgeryToken" />
+            </form>
+        </div>
+    </div>
+</div>

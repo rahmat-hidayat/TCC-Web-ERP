@@ -89,7 +89,7 @@ namespace TCC_Web_ERP.Controllers
                 {
                     0 => sortDirection == "asc" ? query.OrderBy(u => u.UserId) : query.OrderByDescending(u => u.UserId),
                     1 => sortDirection == "asc" ? query.OrderBy(u => u.UserName) : query.OrderByDescending(u => u.UserName),
-                    2 => sortDirection == "asc" ? query.OrderBy(u => u.GroupId) : query.OrderByDescending(u => u.GroupId),
+                    2 => sortDirection == "asc" ? query.OrderBy(u => u.UptProgramm) : query.OrderByDescending(u => u.UptProgramm),
                     3 => sortDirection == "asc" ? query.OrderBy(u => u.EntUser) : query.OrderByDescending(u => u.EntUser),
                     4 => sortDirection == "asc" ? query.OrderBy(u => u.EntDate) : query.OrderByDescending(u => u.EntDate),
                     5 => sortDirection == "asc" ? query.OrderBy(u => u.Status) : query.OrderByDescending(u => u.Status),
@@ -116,7 +116,7 @@ namespace TCC_Web_ERP.Controllers
                 {
                     userId = u.UserId,
                     userName = u.UserName,
-                    groupId = u.GroupId,
+                    uptProgram = u.UptProgramm,
                     entUser = u.EntUser,
                     entDate = u.EntDate?.ToString("yyyy-MM-dd") ?? "",
                     status = u.Status,
@@ -163,7 +163,7 @@ namespace TCC_Web_ERP.Controllers
                 return Json(new
                 {
                     success = true,
-                    status = user.Status == "ACT" ? "Aktif" : "Nonaktif"
+                    status = user.Status == "ACT" ? "AKTIF" : "NON AKTIF"
                 });
             }
             catch (Exception ex)
@@ -177,27 +177,50 @@ namespace TCC_Web_ERP.Controllers
         // ==========================
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CreateJson(TUser user)
+        public IActionResult CreateJson(CreateUserViewModel model)
         {
             if (ModelState.IsValid)
             {
+                // Tambahkan validasi duplikat username
+                if (_context.TUSER.Any(u => u.UserName == model.UserName))
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Username sudah digunakan. Silakan pilih username lain."
+                    });
+                }
+
                 try
                 {
                     var userName = HttpContext.Session.GetString("UserName") ?? "System";
 
-                    if (!string.IsNullOrEmpty(user.UserPassword))
+                    var user = new TUser
                     {
-                        user.UserPassword = BCrypt.Net.BCrypt.HashPassword(user.UserPassword);
-                    }
+                        UserName = model.UserName.ToUpper(),
+                        UserPassword = BCrypt.Net.BCrypt.HashPassword(model.UserPassword),
+                        RoleId = model.RoleId,
 
-                    user.EntDate = DateTime.Now;
-                    user.EntUser = userName;
-                    user.UptUser = userName;
-                    user.UptDate = DateTime.Now;
-                    user.Status = "ACT";
-                    user.Valid = DateTime.Now;
-                    user.UptProgramm = "USER_CREATE";
-                    user.Version = "1.1.7.6";
+                        // Diisi manual
+                        EntDate = DateTime.Now,
+                        EntUser = userName.ToUpper(),
+                        UptUser = userName.ToUpper(),
+                        UptDate = DateTime.Now,
+                        Status = "ACT",
+                        Valid = DateTime.Now.AddYears(50),
+                        ChangePass = "0",
+                        UptProgramm = "USER_CREATE".ToUpper(),
+                        Remark="USER BARU".ToUpper(),
+                        Version = "1.1.7.6",
+                        GroupId = 1,
+                        Blocked = 0,
+                        MacAdd = null,
+                        Tablet = 0,
+                        Driver = 0,
+                        SuperUser = 0,
+                        Email= (model.UserName ?? "").ToUpper() + "@GMAIL.COM",
+                        Esign = null
+                    };
 
                     _context.TUSER.Add(user);
                     _context.SaveChanges();
@@ -227,9 +250,27 @@ namespace TCC_Web_ERP.Controllers
             });
         }
 
-        // ===============================
-        // Tambahan CRUD (Edit, Delete, dll)
-        // ===============================
-        // Tambahkan method EditJson, DeleteJson, atau Detail jika diperlukan
+
+        // ==================================
+        // GET: Partial View Add User Modal
+        // ==================================
+        [HttpGet]
+        public IActionResult GetAddUserModal()
+        {
+            var model = new CreateUserViewModel
+            {
+                RoleList = _context.TROLE
+                    .Where(r => r.IsActive)
+                    .Select(r => new SelectListItem
+                    {
+                        Value = r.RoleId.ToString(),
+                        Text = r.RoleName
+                    }).ToList()
+            };
+
+            return PartialView("_AddUserModal", model);
+        }
+
+
     }
 }
