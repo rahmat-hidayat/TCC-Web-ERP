@@ -1,0 +1,51 @@
+﻿@using TCC_Web_ERP.ViewModels
+@model EditUserViewModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+
+@{
+    var antiforgeryToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
+}
+
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <form id="formEditUser" novalidate>
+                <div class="modal-header bg-primary text-white rounded-top">
+                    <h5 class="modal-title">Edit User</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body p-4">
+
+                    <!-- Hidden UserId -->
+                    <input type="hidden" name="UserId" id="EditUserId" value="@Model.UserId" />
+
+                    <div class="mb-3">
+                        <label for="EditUserName" class="form-label fw-semibold">USER NAME</label>
+                        <input type="text" name="UserName" id="EditUserName" class="form-control" value="@Model.UserName" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="EditRoleId" class="form-label fw-semibold">ROLE USER</label>
+                        <select name="RoleId" id="EditRoleId" class="form-select" required>
+                            <option value="">-- PILIH ROLE USER --</option>
+                            @foreach (var role in Model.RoleList)
+                            {
+                                var selected = role.Value == Model.RoleId.ToString() ? "selected" : "";
+                                @:<option value="@role.Value" @selected>@role.Text</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Hidden fields lainnya kalau ada -->
+
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4 pt-0">
+                    <button type="submit" class="btn btn-primary shadow-sm px-4">Simpan Perubahan</button>
+                    <button type="button" class="btn btn-outline-secondary shadow-sm px-4" data-bs-dismiss="modal">Batal</button>
+                </div>
+
+                <input type="hidden" name="__RequestVerificationToken" value="@antiforgeryToken" />
+            </form>
+        </div>
+    </div>
+</div>

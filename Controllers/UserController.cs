@@ -210,7 +210,7 @@ namespace TCC_Web_ERP.Controllers
                         Valid = DateTime.Now.AddYears(50),
                         ChangePass = "0",
                         UptProgramm = "USER_CREATE".ToUpper(),
-                        Remark="USER BARU".ToUpper(),
+                        Remark = "USER BARU".ToUpper(),
                         Version = "1.1.7.6",
                         GroupId = 1,
                         Blocked = 0,
@@ -218,7 +218,7 @@ namespace TCC_Web_ERP.Controllers
                         Tablet = 0,
                         Driver = 0,
                         SuperUser = 0,
-                        Email= (model.UserName ?? "").ToUpper() + "@GMAIL.COM",
+                        Email = (model.UserName ?? "").ToUpper() + "@GMAIL.COM",
                         Esign = null
                     };
 
@@ -250,7 +250,6 @@ namespace TCC_Web_ERP.Controllers
             });
         }
 
-
         // ==================================
         // GET: Partial View Add User Modal
         // ==================================
@@ -272,5 +271,104 @@ namespace TCC_Web_ERP.Controllers
         }
 
 
+        // ===========================================
+        // GET: JSON Ambil data user berdasarkan ID (untuk Edit Modal)
+        // ===========================================
+        [HttpGet]
+        public async Task<IActionResult> GetUserByIdJson(int id)
+        {
+            var user = await _context.TUSER
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.UserId == id);
+
+            if (user == null)
+                return NotFound(new { message = "User tidak ditemukan" });
+
+            return Json(new
+            {
+                userId = user.UserId,
+                userName = user.UserName,
+                roleId = user.RoleId,
+                uptProgramm = user.UptProgramm,
+                status = user.Status,
+                entUser = user.EntUser,
+                entDate = user.EntDate?.ToString("yyyy-MM-dd"),
+                // tambahkan properti lain jika perlu
+            });
+        }
+        // ===========================================
+        // GET: User/Edit/5 - Load data user untuk modal edit
+        // ===========================================
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var user = await _context.TUSER.FindAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var model = new EditUserViewModel
+            {
+                UserId = user.UserId,
+                UserName = user.UserName,
+                RoleId = user.RoleId ?? 0,
+                RoleList = await GetRoleSelectListAsync()
+            };
+
+            return PartialView("_EditUserModal", model);
+        }
+
+        // ===========================================
+        // POST: User/Edit/5 - Update data user dari modal edit (Ajax)
+        // ===========================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(EditUserViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                model.RoleList = await GetRoleSelectListAsync();
+                return PartialView("_EditUserModal", model);
+            }
+
+            var user = await _context.TUSER.FindAsync(model.UserId);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "User tidak ditemukan" });
+            }
+
+            user.UserName = model.UserName;
+            user.RoleId = model.RoleId == 0 ? null : model.RoleId;
+            user.UptDate = DateTime.Now;
+            user.UptUser = User.Identity?.Name ?? "system";
+
+            try
+            {
+                _context.Update(user);
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, message = "User berhasil diperbarui" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Gagal update user: " + ex.Message });
+            }
+        }
+
+        // ===========================================
+        // Helper: Ambil daftar role sebagai SelectListItem
+        // ===========================================
+        private async Task<List<SelectListItem>> GetRoleSelectListAsync()
+        {
+            return await _context.TROLE
+                .Where(r => r.IsActive)
+                .OrderBy(r => r.RoleName)
+                .Select(r => new SelectListItem
+                {
+                    Value = r.RoleId.ToString(),
+                    Text = r.RoleName
+                })
+                .ToListAsync();
+        }
     }
 }
