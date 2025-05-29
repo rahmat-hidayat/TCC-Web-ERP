@@ -296,6 +296,8 @@ namespace TCC_Web_ERP.Controllers
                 // tambahkan properti lain jika perlu
             });
         }
+
+
         // ===========================================
         // GET: User/Edit/5 - Load data user untuk modal edit
         // ===========================================
@@ -335,25 +337,46 @@ namespace TCC_Web_ERP.Controllers
             var user = await _context.TUSER.FindAsync(model.UserId);
             if (user == null)
             {
-                return Json(new { success = false, message = "User tidak ditemukan" });
+                return Json(new { success = false, message = "User tidak ditemukan." });
             }
 
-            user.UserName = model.UserName;
+            // Update properti-properti yang diizinkan
+            user.UserName = ToUpperSafe(model.UserName);
             user.RoleId = model.RoleId == 0 ? null : model.RoleId;
             user.UptDate = DateTime.Now;
-            user.UptUser = User.Identity?.Name ?? "system";
+            user.UptUser = GetCurrentUserName();
+            user.UptProgramm = "USER EDIT";
+            user.Remark = "USER EDIT";
 
             try
             {
                 _context.Update(user);
                 await _context.SaveChangesAsync();
-                return Json(new { success = true, message = "User berhasil diperbarui" });
+
+                return Json(new { success = true, message = "User berhasil diperbarui." });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Gagal update user: " + ex.Message });
+                return Json(new { success = false, message = $"Gagal update user: {ex.Message}" });
             }
         }
+
+        // ===========================================
+        // Helper: Konversi string ke huruf besar, aman dari null
+        // ===========================================
+        private static string ToUpperSafe(string? input)
+        {
+            return (input ?? string.Empty).Trim().ToUpper();
+        }
+
+        // ===========================================
+        // Helper: Ambil nama user login dalam huruf besar, fallback ke "SYSTEM"
+        // ===========================================
+        private string GetCurrentUserName()
+        {
+            return User.Identity?.Name?.ToUpper() ?? "SYSTEM";
+        }
+
 
         // ===========================================
         // Helper: Ambil daftar role sebagai SelectListItem
@@ -370,5 +393,25 @@ namespace TCC_Web_ERP.Controllers
                 })
                 .ToListAsync();
         }
+
+        // ===========================================
+        // Ambil daftar role untuk modal edit
+        // ===========================================
+        [HttpGet]
+        public async Task<IActionResult> GetRoleListJson()
+        {
+            var roles = await _context.TROLE
+                .Where(r => r.IsActive)
+                .OrderBy(r => r.RoleName)
+                .Select(r => new
+                {
+                    value = r.RoleId,
+                    text = r.RoleName
+                })
+                .ToListAsync();
+
+            return Json(roles);
+        }
+
     }
 }

@@ -50,7 +50,7 @@ namespace TCC_Web_ERP.Controllers
 
             // ✅ Update kolom login info
             user.LastLogin = DateTime.Today; // format: yyyy-MM-dd 00:00:00.000
-            user.UptProgramm = "Login To System";
+            user.UptProgramm = "LOGIN TO SYSTEM";
             user.Version = "1.1.7.6";
 
             await _context.SaveChangesAsync();

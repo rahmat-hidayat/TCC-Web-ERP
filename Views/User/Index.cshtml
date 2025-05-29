@@ -73,7 +73,16 @@
 @section Scripts {
     <script>
         $(function () {
-            var table = $('#userTable').DataTable({
+            const table = initDataTable();
+            bindFilterEvents(table);
+            bindToggleStatusEvent(table);
+            bindAddUserForm(table);
+            bindEditUserButton(table);
+            bindEditUserForm(table);
+        });
+
+        function initDataTable() {
+            return $('#userTable').DataTable({
                 processing: true,
                 serverSide: true,
                 autoWidth: false,
@@ -117,10 +126,10 @@
                         searchable: false,
                         render: function (data) {
                             return `
-                            <button class="btn btn-sm btn-primary me-1 edit-user-btn" data-user-id="${data}">EDIT</button>
-                            <button class="btn btn-sm btn-info me-1 detail-user-btn" data-user-id="${data}">DETAIL</button>
-                            <button class="btn btn-sm btn-danger me-1 delete-user-btn" data-user-id="${data}">DELETE</button>
-                            <button class="btn btn-sm btn-warning toggle-status" data-id="${data}">CHANGE STATUS</button>
+                                <button class="btn btn-sm btn-primary me-1 edit-user-btn" data-user-id="${data}">EDIT</button>
+                                <button class="btn btn-sm btn-info me-1 detail-user-btn" data-user-id="${data}">DETAIL</button>
+                                <button class="btn btn-sm btn-danger me-1 delete-user-btn" data-user-id="${data}">DELETE</button>
+                                <button class="btn btn-sm btn-warning toggle-status" data-id="${data}">CHANGE STATUS</button>
                             `;
                         }
                     }
@@ -144,44 +153,25 @@
                             $('#addUserModal').modal('show');
                         }
                     },
-                    {
-                        extend: 'copy',
-                        text: '<i class="fa-solid fa-copy me-1"></i> COPY',
-                        className: 'btn btn-primary me-2 me-2'
-                    },
-                    {
-                        extend: 'csv',
-                        text: '<i class="fa-solid fa-file-csv me-1"></i> CSV',
-                        className: 'btn btn-primary me-2 me-2'
-                    },
-                    {
-                        extend: 'excel',
-                        text: '<i class="fa-solid fa-file-excel me-1"></i> EXCEL',
-                        className: 'btn btn-primary me-2'
-                    },
-                    {
-                        extend: 'pdf',
-                        text: '<i class="fa-solid fa-file-pdf me-1"></i> PDF',
-                        className: 'btn btn-primary me-2 me-2'
-                    },
-                    {
-                        extend: 'print',
-                        text: '<i class="fa-solid fa-print me-1"></i> PRINT',
-                        className: 'btn btn-primary me-2'
-                    }
+                    { extend: 'copy', text: '<i class="fa-solid fa-copy me-1"></i> COPY', className: 'btn btn-primary me-2' },
+                    { extend: 'csv', text: '<i class="fa-solid fa-file-csv me-1"></i> CSV', className: 'btn btn-primary me-2' },
+                    { extend: 'excel', text: '<i class="fa-solid fa-file-excel me-1"></i> EXCEL', className: 'btn btn-primary me-2' },
+                    { extend: 'pdf', text: '<i class="fa-solid fa-file-pdf me-1"></i> PDF', className: 'btn btn-primary me-2' },
+                    { extend: 'print', text: '<i class="fa-solid fa-print me-1"></i> PRINT', className: 'btn btn-primary me-2' }
                 ]
-
             });
+        }
 
-            // Reload data saat filter atau pencarian berubah
+        function bindFilterEvents(table) {
             $('#roleFilter, #searchName').on('change keyup', function () {
                 const search = $('#searchName').val();
                 if (search.length >= 3 || search.length === 0) {
                     table.ajax.reload();
                 }
             });
+        }
 
-            // Toggle Status User (sudah ada, tidak diubah)
+        function bindToggleStatusEvent(table) {
             $('#userTable').on('click', '.toggle-status', function () {
                 const userId = $(this).data('id');
 
@@ -218,8 +208,9 @@
                     }
                 });
             });
+        }
 
-            // Submit form tambah user (sudah ada, tidak diubah)
+        function bindAddUserForm(table) {
             $('#formAddUser').submit(function (e) {
                 e.preventDefault();
                 if (!this.checkValidity()) {
@@ -227,8 +218,8 @@
                     return;
                 }
 
-                var formData = $(this).serialize();
-                var userName = $('#UserName').val();
+                const formData = $(this).serialize();
+                const userName = $('#UserName').val();
 
                 $.ajax({
                     url: '/User/CreateJson',
@@ -267,85 +258,91 @@
                     }
                 });
             });
+        }
 
-                    // Ketika tombol Edit diklik, ambil data user via AJAX dan tampilkan di modal edit
-        $('#userTable').on('click', '.edit-user-btn', function () {
-            var userId = $(this).data('user-id');
+        function bindEditUserButton(table) {
+            $('#userTable').on('click', '.edit-user-btn', function () {
+                const userId = $(this).data('user-id');
 
-            $.ajax({
-                url: '/User/GetUserByIdJson',
-                method: 'GET',
-                data: { id: userId },
-                success: function (data) {
-                    // Karena controller return langsung objek user, tanpa wrapper success/data
-                    if (data && data.userId) {
-                        // Isi form edit dengan data user dari server
-                        $('#editUserId').val(data.userId);
-                        $('#editUserName').val(data.userName);
-                        $('#editUptProgramm').val(data.uptProgramm); // pastikan id elemen sesuai
-                        $('#editRoleId').val(data.roleId);
-                        // Tambahkan field lain jika perlu...
+                $.ajax({
+                    url: '/User/GetUserByIdJson',
+                    method: 'GET',
+                    data: { id: userId },
+                    success: function (data) {
+                        if (data && data.userId) {
+                            $('#EditUserId').val(data.userId);
+                            $('#EditUserName').val(data.userName);
 
-                        $('#editUserModal').modal('show');
-                    } else {
-                        Swal.fire('Error', 'Gagal mengambil data user.', 'error');
+                            // Ambil daftar role
+                            $.get('/User/GetRoleListJson', function (roles) {
+                                const $dropdown = $('#EditRoleId');
+                                $dropdown.empty();
+                                $dropdown.append('<option value="">-- PILIH ROLE USER --</option>');
+
+                                roles.forEach(function (role) {
+                                    const selected = role.value === data.roleId ? 'selected' : '';
+                                    $dropdown.append(`<option value="${role.value}" ${selected}>${role.text}</option>`);
+                                });
+
+                                $('#editUserModal').modal('show');
+                            });
+                        } else {
+                            Swal.fire('Error', 'Gagal mengambil data user.', 'error');
+                        }
                     }
-                },
-                error: function () {
-                    Swal.fire('Error', 'Terjadi kesalahan saat mengambil data user.', 'error');
-                }
+                });
             });
+        }
+
+        function bindEditUserForm(table) {
+            $('#formEditUser').submit(function (e) {
+                e.preventDefault();
+                    // Ubah semua input teks menjadi huruf besar
+        $('#formEditUser input[type="text"]').each(function () {
+            $(this).val($(this).val().toUpperCase());
         });
+                if (!this.checkValidity()) {
+                    this.reportValidity();
+                    return;
+                }
 
-        // Submit form edit user via AJAX
-        $('#formEditUser').submit(function (e) {
-            e.preventDefault();
+                const formData = $(this).serialize();
 
-            if (!this.checkValidity()) {
-                this.reportValidity();
-                return;
-            }
-
-            var formData = $(this).serialize();
-
-            $.ajax({
-                url: '/User/Edit',  // Sesuaikan dengan route controller POST Edit
-                method: 'POST',
-                headers: {
-                    'RequestVerificationToken': $('[name="__RequestVerificationToken"]').val()
-                },
-                data: formData,
-                success: function (response) {
-                    if (response.success) {
-                        $('#editUserModal').modal('hide');
-                        table.ajax.reload(null, false);
-
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Berhasil!',
-                            text: 'Data user berhasil diperbarui.',
-                            timer: 3000,
-                            showConfirmButton: false
-                        });
-                    } else {
+                $.ajax({
+                    url: '/User/Edit',
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': $('[name="__RequestVerificationToken"]').val()
+                    },
+                    data: formData,
+                    success: function (response) {
+                        if (response.success) {
+                            $('#editUserModal').modal('hide');
+                            table.ajax.reload(null, false);
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: 'Data user berhasil diperbarui.',
+                                timer: 3000,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal!',
+                                text: response.message || 'Terjadi kesalahan saat memperbarui data user.'
+                            });
+                        }
+                    },
+                    error: function () {
                         Swal.fire({
                             icon: 'error',
-                            title: 'Gagal!',
-                            text: response.message || 'Terjadi kesalahan saat memperbarui data user.'
+                            title: 'Server Error!',
+                            text: 'Terjadi kesalahan pada server.'
                         });
                     }
-                },
-                error: function () {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Server Error!',
-                        text: 'Terjadi kesalahan pada server.'
-                    });
-                }
+                });
             });
-        });
-
-
-        });
+        }
     </script>
 }
