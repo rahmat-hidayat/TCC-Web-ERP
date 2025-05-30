@@ -490,6 +490,58 @@ namespace TCC_Web_ERP.Controllers
             }
         }
 
+        // ===========================================
+        // CHANGE PASSWORD
+        // ===========================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePasswordJson(ChangePasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+
+                return Json(new
+                {
+                    success = false,
+                    message = "Data tidak valid",
+                    errors
+                });
+            }
+
+            var user = await _context.TUSER.FindAsync(model.UserId);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "User tidak ditemukan." });
+            }
+
+            if (model.NewPassword != model.ConfirmPassword)
+            {
+                return Json(new { success = false, message = "Password dan konfirmasi password tidak sama." });
+            }
+
+            try
+            {
+                user.UserPassword = BCrypt.Net.BCrypt.HashPassword(model.NewPassword);
+                user.UptDate = DateTime.Now;
+                user.UptUser = HttpContext.Session.GetString("UserName")?.ToUpper() ?? "SYSTEM";
+                user.UptProgramm = "CHANGE_PASSWORD";
+                user.ChangePass = "1"; // tanda password sudah diubah
+
+                _context.Update(user);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Password berhasil diubah." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Gagal ubah password: {ex.Message}" });
+            }
+        }
+
 
 
     }

@@ -53,8 +53,14 @@
 <!-- Modal Edit User -->
 @await Html.PartialAsync("_EditUserModal", new EditUserViewModel { RoleList = new List<SelectListItem>() })
 
+<!-- Modal Change Password -->
+@await Html.PartialAsync("_ChangePasswordModal", new ChangePasswordViewModel { NewPassword = "", ConfirmPassword = "" })
+
+
 <!-- Modal Detail User Placeholder -->
 <div id="modalContainer"></div>
+
+
 
 <style>
     #userTable {
@@ -81,7 +87,8 @@
             bindEditUserButton(table);
             bindEditUserForm(table);
             bindDetailUserButton(table);
-            bindDeleteUserButton(table)
+            bindDeleteUserButton(table);
+			bindChangePasswordButton(table);
         });
 
         function initDataTable() {
@@ -133,7 +140,7 @@
                                 <button class="btn btn-sm btn-info fw-bold me-1 detail-user-btn" data-user-id="${data}">DETAIL</button>
                                 <button class="btn btn-sm btn-danger fw-bold me-1 delete-user-btn" data-user-id="${data}">DELETE</button>
                                 <button class="btn btn-sm btn-warning fw-bold toggle-status" data-id="${data}">CHANGE STATUS</button>
-
+                                <button class="btn btn-sm btn-secondary fw-bold me-1 change-password-btn" data-user-id="${data}">CHANGE PASSWORD</button>
                             `;
                         }
                     }
@@ -420,6 +427,71 @@
                 });
             });
         }
+                // CHANGE PASSWORD
+        function bindChangePasswordButton(table) {
+            // Tampilkan modal saat tombol change-password-btn diklik
+            $('#userTable').on('click', '.change-password-btn', function () {
+                const userId = $(this).data('user-id');
+                $('#formChangePassword')[0].reset();
+                $('#ChangePassUserId').val(userId);
+                $('#changePasswordModal').modal('show'); // perbaikan di sini
+            });
+
+            // Submit form change password
+            $('#formChangePassword').submit(function (e) {
+                e.preventDefault();
+
+                const newPass = $('#NewPassword').val().trim();
+                const confirmPass = $('#ConfirmPassword').val().trim();
+
+                if (!newPass) {
+                    Swal.fire('Peringatan', 'Password baru wajib diisi.', 'warning');
+                    $('#NewPassword').focus();
+                    return;
+                }
+
+                if (!confirmPass) {
+                    Swal.fire('Peringatan', 'Konfirmasi password wajib diisi.', 'warning');
+                    $('#ConfirmPassword').focus();
+                    return;
+                }
+
+                if (newPass !== confirmPass) {
+                    Swal.fire('Peringatan', 'Password dan konfirmasi password harus sama.', 'warning');
+                    $('#ConfirmPassword').focus();
+                    return;
+                }
+
+                const formData = $(this).serialize();
+
+                $.ajax({
+                    url: '/User/ChangePasswordJson',
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': $('[name="__RequestVerificationToken"]').val()
+                    },
+                    data: formData,
+                    success: function (response) {
+                        if (response.success) {
+                            $('#changePasswordModal').modal('hide');
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil',
+                                text: response.message || 'Password berhasil diubah.',
+                                timer: 2500,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            Swal.fire('Gagal', response.message || 'Gagal mengubah password.', 'error');
+                        }
+                    },
+                    error: function () {
+                        Swal.fire('Error', 'Terjadi kesalahan pada server.', 'error');
+                    }
+                });
+            });
+        }
+
 
 
     </script>
