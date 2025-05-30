@@ -413,5 +413,49 @@ namespace TCC_Web_ERP.Controllers
             return Json(roles);
         }
 
+        // ================================
+        // GetUserDetail
+        // ================================
+        [HttpGet]
+        public async Task<IActionResult> GetUserDetail(int id)
+        {
+            var user = await _context.TUSER
+                .Include(u => u.Role)
+                .Where(u => u.UserId == id)
+                .Select(u => new UserDetailViewModel
+                {
+                    UserId = u.UserId,
+                    UserName = u.UserName,
+                    GroupId = u.GroupId,
+                    UserPassword = u.UserPassword,
+                    LastLogin = u.LastLogin,
+                    EntUser = u.EntUser,
+                    EntDate = u.EntDate,
+                    UptUser = u.UptUser,
+                    UptDate = u.UptDate,
+                    UptProgramm = u.UptProgramm,
+                    Remark = u.Remark,
+                    Version = u.Version,
+                    Status = u.Status,
+                    Valid = u.Valid,
+                    ChangePass = u.ChangePass,
+                    Blocked = u.Blocked,
+                    MacAdd = u.MacAdd,
+                    Email = u.Email,
+                    SuperUser = u.SuperUser,
+                    Tablet = u.Tablet,
+                    Driver = u.Driver,
+                    RoleId = u.RoleId,
+                    RoleName = u.Role != null ? u.Role.RoleName : null
+                }).FirstOrDefaultAsync();
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return PartialView("_DetailUserModal", user);
+        }
+
     }
 }

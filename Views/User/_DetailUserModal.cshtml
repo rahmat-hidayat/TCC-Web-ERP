@@ -1,0 +1,146 @@
+﻿@using TCC_Web_ERP.ViewModels;
+@model UserDetailViewModel;
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery;
+@{
+    var antiforgeryToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
+}
+
+<style>
+    /* Label dan titik dua hitam bold */
+    dl.row dt {
+        color: #000000; /* hitam */
+        font-weight: 700;
+        text-align: left;
+        padding-right: 1.5rem;
+        position: relative;
+    }
+
+        dl.row dt::after {
+            content: ":";
+            position: absolute;
+            right: 0;
+            color: #000000; /* hitam */
+            font-weight: 700;
+        }
+
+    /* Nilai hitam biasa */
+    dl.row dd {
+        color: #000000;
+        margin-left: 0;
+        font-weight: 400;
+    }
+
+    /* Border bawah dan padding bawah untuk tiap pasangan */
+    dl.row dd, dl.row dt {
+        border-bottom: 1px solid #dee2e6; /* garis abu */
+        padding-bottom: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+</style>
+
+<div class="modal fade" id="detailUserModal" tabindex="-1" aria-labelledby="detailUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <!-- lebih lebar -->
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <!-- header warna biru -->
+                <h5 class="modal-title" id="detailUserModalLabel">Detail User - @Model.UserName</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button> <!-- close putih -->
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-5">User ID</dt>
+                            <dd class="col-sm-7 fw-bold">@Model.UserId</dd>
+
+                            <dt class="col-sm-5">User Name</dt>
+                            <dd class="col-sm-7">@Model.UserName</dd>
+
+                            <dt class="col-sm-5">Group ID</dt>
+                            <dd class="col-sm-7">@Model.GroupId</dd>
+
+                            <dt class="col-sm-5">Last Login</dt>
+                            <dd class="col-sm-7">@Model.LastLogin?.ToString("dd MMM yyyy HH:mm:ss")</dd>
+
+                            <dt class="col-sm-5">Entry User</dt>
+                            <dd class="col-sm-7">@Model.EntUser</dd>
+
+                            <dt class="col-sm-5">Entry Date</dt>
+                            <dd class="col-sm-7">@Model.EntDate?.ToString("dd MMM yyyy")</dd>
+
+                            <dt class="col-sm-5">Update User</dt>
+                            <dd class="col-sm-7">@Model.UptUser</dd>
+
+                            <dt class="col-sm-5">Update Date</dt>
+                            <dd class="col-sm-7">@Model.UptDate?.ToString("dd MMM yyyy")</dd>
+
+                            <dt class="col-sm-5">Update Program</dt>
+                            <dd class="col-sm-7">@Model.UptProgramm</dd>
+
+                            <dt class="col-sm-5">Remark</dt>
+                            <dd class="col-sm-7">@Model.Remark</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-5">Version</dt>
+                            <dd class="col-sm-7">@Model.Version</dd>
+
+                            <dt class="col-sm-5">Status</dt>
+                            <dd class="col-sm-7">
+                                @if (Model.Status == "ACT")
+                                {
+                                    <span class="badge bg-success">Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Non Aktif</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-5">Valid</dt>
+                            <dd class="col-sm-7">@Model.Valid.ToString("dd MMM yyyy")</dd>
+
+                            <dt class="col-sm-5">Change Pass</dt>
+                            <dd class="col-sm-7">@Model.ChangePass</dd>
+
+                            <dt class="col-sm-5">Blocked</dt>
+                            <dd class="col-sm-7">@Model.Blocked</dd>
+
+                            <dt class="col-sm-5">MAC Address</dt>
+                            <dd class="col-sm-7">@Model.MacAdd</dd>
+
+                            <dt class="col-sm-5">Email</dt>
+                            <dd class="col-sm-7">@Model.Email</dd>
+
+                            <dt class="col-sm-5">Super User</dt>
+                            <dd class="col-sm-7">@Model.SuperUser</dd>
+
+                            <dt class="col-sm-5">Tablet</dt>
+                            <dd class="col-sm-7">@Model.Tablet</dd>
+
+                            <dt class="col-sm-5">Driver</dt>
+                            <dd class="col-sm-7">@Model.Driver</dd>
+
+                            <dt class="col-sm-5">Role</dt>
+                            <dd class="col-sm-7">
+                                @if (!string.IsNullOrEmpty(Model.RoleName))
+                                {
+                                    <span class="badge bg-info text-dark">@Model.RoleName</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>

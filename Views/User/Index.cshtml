@@ -53,7 +53,8 @@
 <!-- Modal Edit User -->
 @await Html.PartialAsync("_EditUserModal", new EditUserViewModel { RoleList = new List<SelectListItem>() })
 
-
+<!-- Modal Detail User Placeholder -->
+<div id="modalContainer"></div>
 
 <style>
     #userTable {
@@ -79,6 +80,7 @@
             bindAddUserForm(table);
             bindEditUserButton(table);
             bindEditUserForm(table);
+            bindDetailUserButton(table);  // Tambah bind untuk tombol detail
         });
 
         function initDataTable() {
@@ -126,10 +128,11 @@
                         searchable: false,
                         render: function (data) {
                             return `
-                                <button class="btn btn-sm btn-primary me-1 edit-user-btn" data-user-id="${data}">EDIT</button>
-                                <button class="btn btn-sm btn-info me-1 detail-user-btn" data-user-id="${data}">DETAIL</button>
-                                <button class="btn btn-sm btn-danger me-1 delete-user-btn" data-user-id="${data}">DELETE</button>
-                                <button class="btn btn-sm btn-warning toggle-status" data-id="${data}">CHANGE STATUS</button>
+                                <button class="btn btn-sm btn-primary fw-bold me-1 edit-user-btn" data-user-id="${data}">EDIT</button>
+                                <button class="btn btn-sm btn-info fw-bold me-1 detail-user-btn" data-user-id="${data}">DETAIL</button>
+                                <button class="btn btn-sm btn-danger fw-bold me-1 delete-user-btn" data-user-id="${data}">DELETE</button>
+                                <button class="btn btn-sm btn-warning fw-bold toggle-status" data-id="${data}">CHANGE STATUS</button>
+
                             `;
                         }
                     }
@@ -341,6 +344,19 @@
                             text: 'Terjadi kesalahan pada server.'
                         });
                     }
+                });
+            });
+        }
+
+        // Fungsi baru untuk bind tombol Detail User
+        function bindDetailUserButton(table) {
+            $('#userTable').on('click', '.detail-user-btn', function () {
+                var userId = $(this).data('user-id');
+                $.get('/User/GetUserDetail', { id: userId }, function (modalHtml) {
+                    $('#modalContainer').html(modalHtml);
+                    $('#detailUserModal').modal('show');
+                }).fail(function () {
+                    Swal.fire('Error', 'Gagal memuat detail user.', 'error');
                 });
             });
         }
