@@ -21,12 +21,16 @@
 
                     <div class="mb-3">
                         <label for="EditUserName" class="form-label fw-semibold">USER NAME</label>
-                        <input type="text" name="UserName" id="EditUserName" class="form-control" value="@Model.UserName" required />
+                        <input type="text" name="UserName" id="EditUserName" class="form-control" value="@Model.UserName" required
+                               oninvalid="this.setCustomValidity('Username wajib diisi.')"
+                               oninput="this.setCustomValidity('')" />
                     </div>
 
                     <div class="mb-3">
                         <label for="EditRoleId" class="form-label fw-semibold">ROLE USER</label>
-                        <select name="RoleId" id="EditRoleId" class="form-select" required>
+                        <select name="RoleId" id="EditRoleId" class="form-select" required
+                                oninvalid="this.setCustomValidity('Role user wajib dipilih.')"
+                                oninput="this.setCustomValidity('')">
                             <option value="">-- PILIH ROLE USER --</option>
                             @foreach (var role in Model.RoleList)
                             {
@@ -35,8 +39,6 @@
                             }
                         </select>
                     </div>
-
-                    
 
                 </div>
                 <div class="modal-footer border-0 px-4 pb-4 pt-0">

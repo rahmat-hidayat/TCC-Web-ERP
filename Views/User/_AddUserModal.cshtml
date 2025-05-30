@@ -1,7 +1,6 @@
 ﻿@model CreateUserViewModel
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 
-
 @{
     var antiforgeryToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
 }
@@ -17,15 +16,21 @@
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label for="UserName" class="form-label fw-semibold">USER NAME</label>
-                        <input type="text" name="UserName" id="UserName" class="form-control" required />
+                        <input type="text" name="UserName" id="UserName" class="form-control" required
+                               oninvalid="this.setCustomValidity('Username wajib diisi.')"
+                               oninput="this.setCustomValidity('')" />
                     </div>
                     <div class="mb-3">
                         <label for="UserPassword" class="form-label fw-semibold">PASSWORD</label>
-                        <input type="password" name="UserPassword" id="UserPassword" class="form-control" required />
+                        <input type="password" name="UserPassword" id="UserPassword" class="form-control" required
+                               oninvalid="this.setCustomValidity('Password wajib diisi.')"
+                               oninput="this.setCustomValidity('')" />
                     </div>
                     <div class="mb-3">
                         <label for="RoleId" class="form-label fw-semibold">ROLE USER</label>
-                        <select name="RoleId" class="form-select" required>
+                        <select name="RoleId" class="form-select" required
+                                oninvalid="this.setCustomValidity('Role user wajib dipilih.')"
+                                oninput="this.setCustomValidity('')">
                             <option value="">-- PILIH ROLE USER --</option>
                             @foreach (var role in Model.RoleList)
                             {
@@ -35,7 +40,7 @@
                     </div>
 
                     <!-- Hidden fields -->
-                    
+
                 </div>
                 <div class="modal-footer border-0 px-4 pb-4 pt-0">
                     <button type="submit" class="btn btn-success shadow-sm px-4">Simpan</button>
