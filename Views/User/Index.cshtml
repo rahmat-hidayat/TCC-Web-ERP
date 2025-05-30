@@ -80,7 +80,8 @@
             bindAddUserForm(table);
             bindEditUserButton(table);
             bindEditUserForm(table);
-            bindDetailUserButton(table);  // Tambah bind untuk tombol detail
+            bindDetailUserButton(table);
+            bindDeleteUserButton(table)
         });
 
         function initDataTable() {
@@ -374,5 +375,52 @@
                 });
             });
         }
+
+        //fungsi delete user
+                        function bindDeleteUserButton(table) {
+            $('#userTable').on('click', '.delete-user-btn', function () {
+                const userId = $(this).data('user-id');
+
+                Swal.fire({
+                    title: 'Apakah Anda yakin?',
+                    text: `Data user ini akan dihapus secara permanen!`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, hapus!',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '/User/DeleteJson',
+                            method: 'POST',
+                            headers: {
+                                'RequestVerificationToken': $('[name="__RequestVerificationToken"]').val()
+                            },
+                            data: { id: userId },
+                            success: function (response) {
+                                if (response.success) {
+                                    table.ajax.reload(null, false);
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Berhasil!',
+                                        text: response.message,
+                                        timer: 2500,
+                                        showConfirmButton: false
+                                    });
+                                } else {
+                                    Swal.fire('Gagal!', response.message || 'Gagal menghapus data.', 'error');
+                                }
+                            },
+                            error: function () {
+                                Swal.fire('Error!', 'Terjadi kesalahan pada server.', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+        }
+
+
     </script>
 }

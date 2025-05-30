@@ -465,5 +465,32 @@ namespace TCC_Web_ERP.Controllers
             return PartialView("_DetailUserModal", user);
         }
 
+        // ===========================================
+        // DELETE
+        // ===========================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteJson(int id)
+        {
+            var user = await _context.TUSER.FindAsync(id);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "User tidak ditemukan." });
+            }
+
+            try
+            {
+                _context.TUSER.Remove(user);
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, message = "Data user berhasil dihapus." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Gagal hapus data: {ex.Message}" });
+            }
+        }
+
+
+
     }
 }
