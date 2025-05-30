@@ -331,7 +331,8 @@ namespace TCC_Web_ERP.Controllers
             if (!ModelState.IsValid)
             {
                 model.RoleList = await GetRoleSelectListAsync();
-                return PartialView("_EditUserModal", model);
+                // Ubah return PartialView menjadi return Json error
+                return Json(new { success = false, message = "Data tidak valid, periksa inputan." });
             }
 
             var user = await _context.TUSER.FindAsync(model.UserId);
@@ -340,7 +341,13 @@ namespace TCC_Web_ERP.Controllers
                 return Json(new { success = false, message = "User tidak ditemukan." });
             }
 
-            // Update properti-properti yang diizinkan
+            bool isDuplicate = _context.TUSER.Any(u => u.UserName == model.UserName && u.UserId != model.UserId);
+            if (isDuplicate)
+            {
+                return Json(new { success = false, message = "Username sudah digunakan oleh user lain. Silakan pilih username lain." });
+            }
+
+            // Update data user...
             user.UserName = ToUpperSafe(model.UserName);
             user.RoleId = model.RoleId == 0 ? null : model.RoleId;
             user.UptDate = DateTime.Now;
@@ -360,6 +367,7 @@ namespace TCC_Web_ERP.Controllers
                 return Json(new { success = false, message = $"Gagal update user: {ex.Message}" });
             }
         }
+
 
         // ===========================================
         // Helper: Konversi string ke huruf besar, aman dari null

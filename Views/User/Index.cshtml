@@ -213,7 +213,7 @@
             });
         }
 
-        function bindAddUserForm(table) {
+                function bindAddUserForm(table) {
             $('#formAddUser').submit(function (e) {
                 e.preventDefault();
                 if (!this.checkValidity()) {
@@ -252,16 +252,21 @@
                             });
                         }
                     },
-                    error: function () {
+                    error: function (xhr) {
+                        let message = 'Terjadi kesalahan pada server.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
                         Swal.fire({
                             icon: 'error',
-                            title: 'Server Error!',
-                            text: 'Terjadi kesalahan pada server.'
+                            title: 'Gagal!',
+                            text: message
                         });
                     }
                 });
             });
         }
+
 
         function bindEditUserButton(table) {
             $('#userTable').on('click', '.edit-user-btn', function () {
@@ -297,19 +302,22 @@
             });
         }
 
-        function bindEditUserForm(table) {
+                function bindEditUserForm(table) {
             $('#formEditUser').submit(function (e) {
                 e.preventDefault();
-                    // Ubah semua input teks menjadi huruf besar
-        $('#formEditUser input[type="text"]').each(function () {
-            $(this).val($(this).val().toUpperCase());
-        });
+
+                // Ubah semua input teks menjadi huruf besar
+                $('#formEditUser input[type="text"]').each(function () {
+                    $(this).val($(this).val().toUpperCase());
+                });
+
                 if (!this.checkValidity()) {
                     this.reportValidity();
                     return;
                 }
 
                 const formData = $(this).serialize();
+                const userName = $('#UserName').val();
 
                 $.ajax({
                     url: '/User/Edit',
@@ -322,10 +330,11 @@
                         if (response.success) {
                             $('#editUserModal').modal('hide');
                             table.ajax.reload(null, false);
+
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Berhasil!',
-                                text: 'Data user berhasil diperbarui.',
+                                text: `Data user "${userName}" berhasil diperbarui.`,
                                 timer: 3000,
                                 showConfirmButton: false
                             });
@@ -333,20 +342,25 @@
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Gagal!',
-                                text: response.message || 'Terjadi kesalahan saat memperbarui data user.'
+                                text: response.message || 'Terjadi kesalahan saat memperbarui user.'
                             });
                         }
                     },
-                    error: function () {
+                    error: function (xhr) {
+                        let message = 'Terjadi kesalahan pada server.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
                         Swal.fire({
                             icon: 'error',
-                            title: 'Server Error!',
-                            text: 'Terjadi kesalahan pada server.'
+                            title: 'Gagal!',
+                            text: message
                         });
                     }
                 });
             });
         }
+
 
         // Fungsi baru untuk bind tombol Detail User
         function bindDetailUserButton(table) {
