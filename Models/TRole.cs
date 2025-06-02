@@ -14,7 +14,7 @@ namespace TCC_Web_ERP.Models
         [Required]
         [Column("ROLE_NAME")]
         [StringLength(100)]
-        public string? RoleName { get; set; }
+        public required string RoleName { get; set; }
 
         [Column("DESCRIPTION")]
         [StringLength(200)]
@@ -24,7 +24,8 @@ namespace TCC_Web_ERP.Models
         [Column("IS_ACTIVE")]
         public bool IsActive { get; set; }
 
-        public ICollection<TRoleMenu> RoleMenus { get; set; } = [];
+        public ICollection<TRoleMenu> RoleMenus { get; set; } = new List<TRoleMenu>();
+
 
     }
 }

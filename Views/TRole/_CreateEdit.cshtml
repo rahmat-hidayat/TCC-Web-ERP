@@ -1,0 +1,58 @@
+﻿@model TCC_Web_ERP.Models.TRole
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+
+@{
+    bool isEdit = Model.RoleId != 0;
+}
+
+<div class="modal fade" id="addEditRoleModal" tabindex="-1" aria-labelledby="addEditRoleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <form id="formAddEditRole" novalidate method="post"
+                  asp-action="@(isEdit ? "Edit" : "Create")"
+                  asp-controller="TRole">
+                @if (isEdit)
+                {
+                    <input type="hidden" asp-for="RoleId" />
+                }
+                @Html.AntiForgeryToken() <!-- Token antiforgery otomatis -->
+
+                <div class="modal-header bg-primary text-white rounded-top">
+                    <h5 class="modal-title">@((isEdit) ? "Edit Role" : "Tambah Role Baru")</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label asp-for="RoleName" class="form-label fw-semibold"></label>
+                        <input asp-for="RoleName" class="form-control" required
+                               oninvalid="this.setCustomValidity('Role name wajib diisi.')"
+                               oninput="this.setCustomValidity('')" />
+                        <span asp-validation-for="RoleName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label fw-semibold"></label>
+                        <input asp-for="Description" class="form-control" />
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="hidden" asp-for="IsActive" value="false" />
+                        <input asp-for="IsActive" class="form-check-input" />
+                        <label asp-for="IsActive" class="form-check-label fw-semibold"></label>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 px-4 pb-4 pt-0">
+                    <button type="submit" class="btn btn-success shadow-sm px-4">Simpan</button>
+                    <button type="button" class="btn btn-outline-secondary shadow-sm px-4" data-bs-dismiss="modal">Batal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
