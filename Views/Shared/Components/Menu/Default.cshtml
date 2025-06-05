@@ -8,8 +8,11 @@
                 <i class="@item.Menu.Icon"></i>
                 @item.Menu.Title
             </a>
+
+            <!-- Cek apakah menu memiliki submenu -->
             @if (item.Children != null && item.Children.Any())
             {
+                <!-- Submenu akan muncul ketika menu utama di-hover -->
                 <ul class="nav flex-column ms-3">
                     @foreach (var child in item.Children)
                     {
@@ -25,3 +28,33 @@
         </li>
     }
 </ul>
+
+<style>
+    /* Menyembunyikan submenu secara default */
+    .nav-item .nav.flex-column {
+        display: none;
+    }
+
+    /* Menampilkan submenu saat menu utama di-hover */
+    .nav-item:hover .nav.flex-column {
+        display: block;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Animasi untuk submenu (jika ada) saat hover
+            $('.nav-item').hover(
+                function () {
+                    // Menampilkan submenu dengan efek slide down
+                    $(this).children('.nav.flex-column').stop(true, true).slideDown(200);
+                },
+                function () {
+                    // Menyembunyikan submenu dengan efek slide up
+                    $(this).children('.nav.flex-column').stop(true, true).slideUp(200);
+                }
+            );
+        });
+    </script>
+}
