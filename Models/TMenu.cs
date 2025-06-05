@@ -39,7 +39,7 @@ namespace TCC_Web_ERP.Models
         public int? OrderNo { get; set; }
 
         [Column("IS_ACTIVE")]
-        public bool? IsActive { get; set; }
+        public bool IsActive { get; set; }
 
         public ICollection<TRoleMenu> RoleMenus { get; set; } = [];
     }
